@@ -1,0 +1,2073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ESO Multi-Character Builder</title>
+  <style>
+    :root {
+      --bg: #0a0d12;
+      --bg2: #0d1219;
+      --panel: rgba(18, 24, 34, 0.92);
+      --panel2: rgba(14, 18, 26, 0.95);
+      --line: #2b3343;
+      --line-soft: #3d4658;
+      --text: #ebe4d6;
+      --muted: #9ea6b5;
+      --gold: #c7a86b;
+      --gold-soft: rgba(199, 168, 107, 0.2);
+      --good: #7fa06f;
+      --warn: #a98c58;
+      --bad: #9a6666;
+      --radius: 16px;
+      --shadow: 0 16px 40px rgba(0,0,0,0.45);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top, rgba(199,168,107,0.15), transparent 28%),
+        linear-gradient(180deg, #06080d 0%, #0b1017 55%, #090c12 100%);
+      min-height: 100vh;
+    }
+    .app-shell { max-width: 1680px; margin: 0 auto; padding: 20px; }
+    .hero, .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: linear-gradient(180deg, #10161f, #0d131a);
+      padding: 12px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, transparent, rgba(199,168,107,0.08), transparent);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(0,0,0,0.45);
+    }
+
+    .card:hover::after {
+      opacity: 1;
+    }
+
+    .hero { padding: 22px; margin-bottom: 16px; position: relative; overflow: hidden; animation: fadeIn 0.8s ease; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 15% 20%, rgba(199,168,107,0.14), transparent 18%),
+        radial-gradient(circle at 85% 25%, rgba(126,106,70,0.16), transparent 20%),
+        linear-gradient(135deg, rgba(255,255,255,0.02), transparent 30%);
+      pointer-events: none;
+    }
+    .hero-top { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+    .title { margin: 0; font-size: 2rem; letter-spacing: 0.04em; }
+    .eso-crest {
+      width: 64px;
+      height: 64px;
+      border-radius: 18px;
+      border: 1px solid rgba(199,168,107,0.35);
+      background:
+        linear-gradient(180deg, rgba(199,168,107,0.18), rgba(199,168,107,0.05)),
+        radial-gradient(circle at center, rgba(199,168,107,0.15), transparent 60%),
+        #121821;
+      display: grid;
+      place-items: center;
+      color: var(--gold);
+      font-size: 1.4rem;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
+    }
+    .hero-heading {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .section-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid var(--line-soft);
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, rgba(199,168,107,0.18), rgba(199,168,107,0.05));
+      color: var(--gold);
+      font-size: 1.1rem;
+      flex: 0 0 auto;
+      box-shadow: inset 0 0 8px rgba(199,168,107,0.15);
+    }
+
+    .icon-sigil {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      border: 1px solid rgba(199,168,107,0.35);
+      display: grid;
+      place-items: center;
+      font-size: 1.2rem;
+      color: var(--gold);
+      background:
+        radial-gradient(circle at 30% 30%, rgba(199,168,107,0.35), transparent 40%),
+        radial-gradient(circle at 70% 70%, rgba(199,168,107,0.18), transparent 45%),
+        #0f141c;
+      box-shadow: 0 0 10px rgba(199,168,107,0.25), inset 0 0 6px rgba(199,168,107,0.2);
+      transition: all 0.25s ease;
+    }
+
+    .icon-sigil:hover {
+      transform: scale(1.08);
+      box-shadow: 0 0 18px rgba(199,168,107,0.45), inset 0 0 10px rgba(199,168,107,0.3);
+    }
+
+    .class-theme-dragonknight .icon-sigil { box-shadow: 0 0 14px rgba(255,80,40,0.4); }
+    .class-theme-sorcerer .icon-sigil { box-shadow: 0 0 14px rgba(120,180,255,0.4); }
+    .class-theme-nightblade .icon-sigil { box-shadow: 0 0 14px rgba(180,120,255,0.4); }
+    .class-theme-templar .icon-sigil { box-shadow: 0 0 14px rgba(255,220,120,0.4); }
+    .class-theme-warden .icon-sigil { box-shadow: 0 0 14px rgba(120,255,180,0.4); }
+    .class-theme-necromancer .icon-sigil { box-shadow: 0 0 14px rgba(120,255,120,0.35); }
+    .class-theme-arcanist .icon-sigil { box-shadow: 0 0 14px rgba(120,255,255,0.35); }
+
+    .icon-sigil.small {
+      width: 28px;
+      height: 28px;
+      font-size: .85rem;
+      border-radius: 8px;
+    }
+
+    .icon-banner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(199,168,107,0.25);
+      background: linear-gradient(135deg, rgba(199,168,107,0.1), rgba(16,21,29,0.25));
+    }
+
+    .icon-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(199,168,107,0.7), transparent);
+      margin: 12px 0;
+    }
+    .ornament-line {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(199,168,107,0.5), transparent);
+      margin: 10px 0 14px;
+    }
+    .slot-icon-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      border: 1px solid var(--line-soft);
+      background: rgba(199,168,107,0.08);
+      color: var(--gold);
+      font-size: .92rem;
+      margin-right: 10px;
+    }
+    .class-banner {
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(199,168,107,0.22);
+      background: linear-gradient(135deg, rgba(199,168,107,0.08), rgba(16,21,29,0.2));
+      margin-bottom: 14px;
+    }
+    .icon-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+      gap: 10px;
+    }
+    .icon-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #10161f;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .icon-card .section-icon {
+      width: 30px;
+      height: 30px;
+      font-size: .9rem;
+      border-radius: 8px;
+    }
+    .subtitle { margin: 10px 0 0; color: var(--muted); line-height: 1.45; max-width: 980px; }
+    .chip-row, .tab-row, .subtab-row, .flex-wrap, .toolbar, .character-tabs { display: flex; flex-wrap: wrap; gap: 10px; }
+    .chip, .tab, .subtab, .char-tab, .mini-pill {
+      border: 1px solid var(--line-soft);
+      border-radius: 999px;
+      background: #131a24;
+      color: var(--text);
+      padding: 9px 13px;
+      cursor: pointer;
+      transition: .18s ease;
+      font: inherit;
+    }
+    .tab, .subtab, .char-tab { border-radius: 12px; }
+    .tab.active, .subtab.active, .char-tab.active, .chip:hover, .tab:hover, .subtab:hover, .char-tab:hover, button:hover, select:hover, input:hover, textarea:hover {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 1px rgba(199,168,107,0.18) inset;
+    }
+    .mini-pill { padding: 6px 10px; font-size: .82rem; cursor: default; }
+    .mini-pill.good { color: #e7f5df; background: rgba(76, 105, 66, .35); }
+    .mini-pill.warn { color: #fff3d1; background: rgba(112, 92, 50, .35); }
+    .mini-pill.bad { color: #ffe1e1; background: rgba(120, 66, 66, .35); }
+    .panel { padding: 16px; margin-bottom: 16px; }
+    .panel h2, .panel h3, .panel h4 { margin-top: 0; }
+    .grid-2, .grid-3, .grid-4, .grid-main, .score-grid, .character-grid, .cp-grid, .craft-grid, .trait-grid, .guild-grid {
+      display: grid; gap: 14px;
+    }
+    .grid-main { grid-template-columns: 1.2fr .8fr; }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    .grid-4 { grid-template-columns: repeat(4, minmax(0,1fr)); }
+    .score-grid { grid-template-columns: repeat(5, minmax(0,1fr)); }
+    .character-grid { grid-template-columns: 1fr; }
+    .cp-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    .craft-grid, .guild-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    .trait-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .card { padding: 14px; background: rgba(13,18,26,.9); }
+    .small-label { display:block; font-size:.76rem; text-transform:uppercase; letter-spacing:.08em; color: var(--muted); margin-bottom:7px; }
+    input, select, textarea, button {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #10161f;
+      color: var(--text);
+      padding: 11px 12px;
+      font: inherit;
+    }
+    input[type="checkbox"] { width: auto; }
+    textarea { min-height: 86px; resize: vertical; }
+    button { cursor: pointer; }
+    button.primary { background: linear-gradient(180deg, #3a3022, #2b2319); border-color: #7b6948; }
+    .toolbar button { width: auto; }
+    .char-tab { display: inline-flex; gap: 8px; align-items: center; }
+    .char-tab small { color: var(--muted); }
+    .char-actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .char-actions button { width: auto; }
+    .section-note, .status {
+      border: 1px solid var(--line-soft);
+      border-radius: 12px;
+      padding: 10px 12px;
+      color: var(--muted);
+      background: rgba(16, 21, 29, 0.9);
+    }
+    .help-box {
+      border: 1px solid rgba(199,168,107,0.28);
+      background: rgba(199,168,107,0.08);
+      border-radius: 14px;
+      padding: 12px 14px;
+      color: var(--text);
+    }
+    .help-box h4 { margin: 0 0 8px; }
+    .help-box p { margin: 0; color: var(--muted); line-height: 1.45; }
+    .glossary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 10px;
+    }
+    .helper-kicker {
+      font-size: .75rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+    .quick-start-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .quick-start-row button { width: auto; }
+    .muted-small {
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.45;
+    }
+    .field-help {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: .82rem;
+      line-height: 1.35;
+    }
+    .beginner-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line-soft);
+      background: rgba(199,168,107,0.12);
+      color: var(--text);
+      font-size: .82rem;
+    }
+    .toggle-inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: auto;
+    }
+    .section-note, .status {
+      border: 1px solid var(--line-soft);
+      border-radius: 12px;
+      padding: 10px 12px;
+      color: var(--muted);
+      background: rgba(16, 21, 29, 0.9);
+    }
+    .score-box { text-align:center; }
+    .score-num { font-size: 1.8rem; color: var(--gold); margin: 6px 0; }
+    .slot-grid { display:grid; gap:10px; }
+    .slot-item, .list-item {
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:#10161f;
+      padding:10px 12px;
+    }
+    .slot-title { font-size:.9rem; margin-bottom:8px; color:#f4ead6; }
+    .list-clean { list-style:none; margin:0; padding:0; display:grid; gap:8px; }
+    .meter {
+      height: 10px; border-radius:999px; overflow:hidden; background:#111822; border:1px solid var(--line);
+    }
+    .meter > span { display:block; height:100%; background: linear-gradient(90deg, #7e6a46, #c7a86b); }
+    .inline { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    .two-inline { display:grid; grid-template-columns: 1fr auto; gap:10px; align-items:end; }
+    .hidden { display:none !important; }
+    @media (max-width: 1200px) {
+      .grid-main, .grid-4, .grid-3, .score-grid, .craft-grid, .guild-grid, .cp-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
+    @media (max-width: 820px) {
+      .grid-main, .grid-4, .grid-3, .grid-2, .score-grid, .craft-grid, .guild-grid, .cp-grid, .trait-grid { grid-template-columns: 1fr; }
+      .app-shell { padding: 12px; }
+      .title { font-size: 1.65rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <section class="hero">
+      <div class="hero-top">
+        <div>
+          <div class="hero-heading">
+            <div class="icon-sigil">✦</div>
+            <div>
+              <h1 class="title">ESO Character Builder</h1>
+              <div class="muted-small">Dark fantasy build planner with ESO-inspired presentation</div>
+            </div>
+          </div>
+          <p class="subtitle">A fully interactive, browser-based Elder Scrolls Online multi-character planner with isolated character tabs, build optimization, champion points, crafting progression, research tracking, best-in-slot recommendations, and live guild synergy analysis.</p>
+        </div>
+        <div class="chip-row">
+          <span class="mini-pill">Multi-Character</span>
+          <span class="mini-pill">Shareable Links</span>
+          <span class="mini-pill">Guild Synergy</span>
+          <span class="mini-pill">Crafting Tracker</span>
+          <label class="beginner-badge"><input id="beginnerModeToggle" type="checkbox" checked /> Beginner Friendly Mode</label>
+        </div>
+      </div>
+      <div class="section-note" id="statusMessage">Ready.</div>
+      <div class="quick-start-row" id="starterBuildBtns">
+        <button class="primary" id="starterDpsBtn">Quick Start DPS</button>
+        <button id="starterHealerBtn">Quick Start Healer</button>
+        <button id="starterTankBtn">Quick Start Tank</button>
+        <button id="starterCrafterBtn">Quick Start Crafter</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-header"><div class="section-icon">👥</div><h3>Character Tabs</h3></div>
+      <div class="ornament-line"></div>
+      <div class="character-tabs" id="characterTabs"></div>
+      <div class="grid-4" style="margin-top:14px;">
+        <div>
+          <span class="small-label">New Character Name</span>
+          <input id="newCharacterName" placeholder="Example: Trial Arcanist" />
+        </div>
+        <div>
+          <span class="small-label">Rename Active Character</span>
+          <input id="renameCharacterName" placeholder="Rename active tab" />
+        </div>
+        <div class="char-actions" style="align-items:end;">
+          <button class="primary" id="addCharacterBtn">+ Create Character</button>
+          <button id="renameCharacterBtn">Rename</button>
+        </div>
+        <div class="char-actions" style="align-items:end;">
+          <button id="duplicateCharacterBtn">Duplicate</button>
+          <button id="deleteCharacterBtn">Delete</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-header"><div class="section-icon">🧭</div><h3>Site Navigation</h3></div>
+      <div class="ornament-line"></div>
+      <div class="tab-row" id="mainTabs">
+        <button class="tab active" data-tab="builder">Builder</button>
+        <button class="tab" data-tab="bis">Best-in-Slot</button>
+        <button class="tab" data-tab="crafting">Crafting Professions</button>
+        <button class="tab" data-tab="traits">Trait Research Tracker</button>
+        <button class="tab" data-tab="guild">Guild Synergy</button>
+      </div>
+    </section>
+
+    <section id="tab-builder">
+      <section class="panel">
+        <div class="subtab-row" id="builderTabs">
+          <button class="subtab active" data-builder-tab="identity">Identity</button>
+          <button class="subtab" data-builder-tab="attributes">Attributes & CP</button>
+          <button class="subtab" data-builder-tab="skills">Skills & Bars</button>
+          <button class="subtab" data-builder-tab="gear">Gear & Sets</button>
+        </div>
+      </section>
+
+      <section id="builder-subtab-identity" class="grid-main">
+        <div>
+          <section class="panel">
+            <div class="section-header"><div class="icon-sigil small">⌘</div><h2>Character Identity</h2></div>
+            <div class="ornament-line"></div>
+            <div class="grid-4">
+              <div><span class="small-label">Class</span><select id="classSelect"></select><div class="field-help">Pick the class you want to build around. This changes available class skills.</div></div>
+              <div><span class="small-label">Race</span><select id="raceSelect"></select><div class="field-help">Race helps define sustain, crit, or tankiness. It does not lock your playstyle.</div></div>
+              <div><span class="small-label">Alliance</span><select id="allianceSelect"></select><div class="field-help">Mainly useful for identity, PvP flavor, and character planning.</div></div>
+              <div><span class="small-label">Primary Role</span><select id="roleSelect"></select><div class="field-help">Choose how this character contributes most: damage, healing, tanking, or hybrid utility.</div></div>
+            </div>
+            <div class="grid-4" style="margin-top:14px;">
+              <div><span class="small-label">Content Focus</span><select id="contentTypeSelect"></select><div class="field-help">This tells the app whether to lean toward PvE, PvP, trials, or smaller-group content.</div></div>
+              <div><span class="small-label">Mode</span><select id="modeSelect"></select><div class="field-help">Use this to signal whether the build is mainly solo, group, or competitive.</div></div>
+              <div><span class="small-label">Armor Weight</span><select id="armorWeightSelect"></select><div class="field-help">Light usually favors magicka, medium favors stamina, heavy favors survivability.</div></div>
+              <div><span class="small-label">Build Notes</span><input id="characterNotes" placeholder="What this character is for" /><div class="field-help">Write a quick reminder like “trial healer,” “solo questing,” or “PvP bruiser.”</div></div>
+            </div>
+            <div class="help-box" style="margin-top:14px;">
+              <div class="helper-kicker">New Player Guide</div>
+              <h4>How to build a character here</h4>
+              <p>Start with Class, Role, and Content Focus. Then go to <strong>Attributes &amp; CP</strong>, fill your <strong>Skills &amp; Bars</strong>, and finish with <strong>Gear &amp; Sets</strong>. The Best-in-Slot and Guild Synergy tabs will react to your choices automatically.</p>
+            </div>
+          </section>
+          <section class="panel">
+            <div class="section-header"><div class="icon-sigil small">⚔</div><h2>Class Snapshot</h2></div>
+            <div class="class-banner">
+              <div class="helper-kicker">ESO-style class panel</div>
+              <div class="muted-small">Use this area like a class overview card. It summarizes the role identity, strengths, and playstyle direction of the currently selected class.</div>
+            </div>
+            <div class="card">
+              <div class="small-label">Overview</div>
+              <div id="classOverview"></div>
+            </div>
+            <div class="grid-2" style="margin-top:14px;">
+              <div class="card">
+                <div class="small-label">Strengths</div>
+                <ul class="list-clean" id="classStrengths"></ul>
+              </div>
+              <div class="card">
+                <div class="small-label">Recommended Playstyles</div>
+                <ul class="list-clean" id="classPlaystyles"></ul>
+              </div>
+            </div>
+            <div class="help-box" style="margin-top:14px;">
+              <div class="helper-kicker">Glossary</div>
+              <div class="glossary-grid">
+                <div class="list-item"><strong>Selfish set</strong><div class="muted-small">Mostly improves your own damage or survival.</div></div>
+                <div class="list-item"><strong>Support set</strong><div class="muted-small">Improves group damage, healing, sustain, or utility.</div></div>
+                <div class="list-item"><strong>Front bar</strong><div class="muted-small">Your primary active weapon bar and core combat skills.</div></div>
+                <div class="list-item"><strong>Back bar</strong><div class="muted-small">Your support bar for buffs, heals, damage-over-time effects, and utility.</div></div>
+              </div>
+            </div>
+          </section>
+        </div>
+        <div>
+          <section class="panel">
+            <div class="section-header"><div class="icon-sigil small">☰</div><h2>Build Snapshot</h2></div>
+            <div class="help-box" style="margin-bottom:14px;">
+              <h4>Not sure where to start?</h4>
+              <p>Use one of the Quick Start buttons at the top. They create a solid beginner-friendly foundation, then you can customize the details after.</p>
+            </div>
+            <div class="grid-2" id="summaryGrid"></div>
+          </section>
+          <section class="panel">
+            <div class="section-header"><div class="icon-sigil small">✧</div><h2>Quick Actions</h2></div>
+            <div class="toolbar">
+              <button class="primary" id="autoBuildBtn">Auto Fill Recommendations</button>
+              <button id="copyJsonBtn">Export Character JSON</button>
+              <button id="copyRosterBtn">Export Roster JSON</button>
+              <button id="importJsonBtn">Import JSON</button>
+              <button id="shareLinkBtn">Create Shareable Link</button>
+            </div>
+            <div class="section-note" style="margin-top:12px;">Each character stores fully independent class, attributes, bars, gear, champion points, crafting, traits, and guild analysis data.</div>
+          </section>
+        </div>
+      </section>
+
+      <section id="builder-subtab-attributes" class="hidden">
+        <section class="panel">
+          <div class="section-header"><div class="icon-sigil small">❤</div><h2>Attributes</h2></div>
+          <div class="help-box" style="margin-bottom:14px;">
+            <h4>Simple rule of thumb</h4>
+            <p>DPS builds usually stack one main resource, tanks invest heavily in Health, and healers usually prioritize Magicka with a small safety buffer.</p>
+          </div>
+          <div class="grid-3">
+            <div><span class="small-label">Health</span><input type="number" id="attrHealth" min="0" max="64" /></div>
+            <div><span class="small-label">Magicka</span><input type="number" id="attrMagicka" min="0" max="64" /></div>
+            <div><span class="small-label">Stamina</span><input type="number" id="attrStamina" min="0" max="64" /></div>
+          </div>
+        </section>
+        <section class="panel">
+          <div class="section-header"><div class="icon-sigil small">✹</div><h2>Champion Points</h2></div>
+          <div class="cp-grid">
+            <div class="card"><span class="small-label">Warfare</span><input type="number" id="cpWarfare" min="0" /></div>
+            <div class="card"><span class="small-label">Fitness</span><input type="number" id="cpFitness" min="0" /></div>
+            <div class="card"><span class="small-label">Craft</span><input type="number" id="cpCraft" min="0" /></div>
+          </div>
+        </section>
+      </section>
+
+      <section id="builder-subtab-skills" class="hidden">
+        <section class="panel">
+          <div class="section-header"><div class="icon-sigil small">✧</div><h2>Skill Bars</h2></div>
+          <div class="help-box" style="margin-bottom:14px;">
+            <h4>Building your bars</h4>
+            <p>Put your main attack or spammable on the front bar. Use the back bar for buffs, damage-over-time effects, healing, shields, and utility.</p>
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="small-label">Front Bar Weapon</div>
+              <select id="frontWeaponSelect"></select>
+              <div class="slot-grid" style="margin-top:12px;" id="frontSkillSlots"></div>
+            </div>
+            <div class="card">
+              <div class="small-label">Back Bar Weapon</div>
+              <select id="backWeaponSelect"></select>
+              <div class="slot-grid" style="margin-top:12px;" id="backSkillSlots"></div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section id="builder-subtab-gear" class="hidden">
+        <section class="panel">
+          <div class="section-header"><div class="icon-sigil small">⛨</div><h2>Gear, Sets, Traits & Enchantments</h2></div>
+          <div class="help-box" style="margin-bottom:14px;">
+            <h4>How gear works here</h4>
+            <p>Enter your current set names exactly if you know them. The app uses those names to judge whether your setup is selfish, support-oriented, PvP-focused, or group-friendly.</p>
+          </div>
+          <div class="grid-3" id="gearSlots"></div>
+          <div class="help-box" style="margin-top:14px;">
+            <h4>Set completion tracker</h4>
+            <p>Recognized ESO sets now show whether they are active at 5 pieces or still incomplete. Use the autocomplete suggestions in each set field to avoid typos.</p>
+          </div>
+        </section>
+      </section>
+    </section>
+
+    <section id="tab-bis" class="hidden">
+      <section class="panel">
+        <div class="section-header"><div class="icon-sigil small">✪</div><h2>Best-in-Slot</h2></div>
+        <div class="help-box" style="margin-bottom:14px;">
+          <h4>How to read this tab</h4>
+          <p>This section is your recommendation engine. It looks at your role, content type, and current set names, then tells you whether your gear direction fits your goal.</p>
+        </div>
+        <div class="section-note">👉 Recommended Build – Not Final</div>
+        <div class="grid-2" style="margin-top:14px;">
+          <div class="card">
+            <div class="small-label">Recommended Sets</div>
+            <ul class="list-clean" id="bisSets"></ul>
+          </div>
+          <div class="card">
+            <div class="small-label">Recommended Adjustments</div>
+            <ul class="list-clean" id="bisNotes"></ul>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section id="tab-crafting" class="hidden">
+      <section class="panel">
+        <div class="help-box" style="margin-bottom:14px;">
+          <h4>Crafting for newer players</h4>
+          <p>Level one profession at a time if you are overwhelmed. Blacksmithing, Clothing, and Woodworking are easiest to understand first because they connect directly to gear upgrades.</p>
+        </div>
+        <div class="subtab-row" id="craftingTabs"></div>
+      </section>
+      <section class="grid-main">
+        <div>
+          <section class="panel">
+            <div class="section-header"><div class="icon-sigil small">⚒</div><h2 id="craftingHeading">Crafting Profession</h2></div>
+            <div class="grid-2">
+              <div class="card"><span class="small-label">Level</span><input type="number" id="craftingLevelInput" min="1" max="50" /></div>
+              <div class="card"><span class="small-label">Progression Stage</span><div id="craftingStage"></div></div>
+            </div>
+            <div class="card" style="margin-top:14px;">
+              <div class="small-label">Profession Notes</div>
+              <div id="craftingSummary"></div>
+            </div>
+          </section>
+          <section class="panel">
+            <div class="section-header"><div class="icon-sigil small">⛏</div><h2>Material Tiers</h2></div>
+            <ul class="list-clean" id="craftingMaterials"></ul>
+          </section>
+        </div>
+        <div>
+          <section class="panel">
+            <div class="section-header"><div class="icon-sigil small">⬆</div><h2>Efficient Leveling</h2></div>
+            <ul class="list-clean" id="craftingTips"></ul>
+          </section>
+          <section class="panel">
+            <div class="section-header"><div class="icon-sigil small">☷</div><h2>Crafting Value</h2></div>
+            <div class="card">
+              <div class="small-label">Contribution to Guild / Economy</div>
+              <div id="craftingContribution"></div>
+            </div>
+          </section>
+        </div>
+      </section>
+    </section>
+
+    <section id="tab-traits" class="hidden">
+      <section class="panel">
+        <div class="section-header"><div class="icon-sigil small">⌛</div><h2>Trait Research Tracker</h2></div>
+        <div class="help-box" style="margin-bottom:14px;">
+          <h4>Why this matters</h4>
+          <p>Trait research is one of the biggest long-term crafting bottlenecks in ESO. Even if you are new, marking known vs unknown traits here helps you plan your crafter efficiently.</p>
+        </div>
+        <div class="trait-grid" id="traitResearchGrid"></div>
+      </section>
+    </section>
+
+    <section id="tab-guild" class="hidden">
+      <section class="panel">
+        <div class="section-header"><div class="icon-sigil small">⚑</div><h2>Guild Synergy</h2></div>
+        <div class="help-box" style="margin-bottom:14px;">
+          <h4>What this score means</h4>
+          <p>This tab asks one question: how useful is this build to a group? It checks your damage, support, survivability, utility, crafting value, and set overlap to answer that.</p>
+        </div>
+        <div class="score-grid" id="guildScoreGrid"></div>
+      </section>
+      <section class="grid-main">
+        <div>
+          <section class="panel">
+            <div class="section-header"><div class="section-icon">▲</div><h2>Strengths</h2></div>
+            <ul class="list-clean" id="guildStrengths"></ul>
+          </section>
+          <section class="panel">
+            <div class="section-header"><div class="section-icon">▼</div><h2>Weaknesses</h2></div>
+            <ul class="list-clean" id="guildWeaknesses"></ul>
+          </section>
+        </div>
+        <div>
+          <section class="panel">
+            <div class="section-header"><div class="section-icon">↺</div><h2>Recommended Changes</h2></div>
+            <ul class="list-clean" id="guildRecommendations"></ul>
+          </section>
+          <section class="panel">
+            <div class="section-header"><div class="section-icon">◎</div><h2>Best Role Fit</h2></div>
+            <div class="card" id="guildRoleFit"></div>
+          </section>
+        </div>
+      </section>
+    </section>
+  </div>
+
+  <script>
+    const FULL_SKILL_DATA = {
+      Dragonknight: {
+        classLines: {
+          "Ardent Flame": {
+            skills: [
+              { name: "Fiery Breath", morphs: ["Engulfing Flames", "Noxious Breath"] },
+              { name: "Searing Strike", morphs: ["Burning Embers", "Venomous Claw"] },
+              { name: "Lava Whip", morphs: ["Flame Lash", "Molten Whip"] },
+              { name: "Inferno", morphs: ["Standard of Might", "Shifting Standard"] }
+            ]
+          },
+          "Draconic Power": {
+            skills: [
+              { name: "Spiked Armor", morphs: ["Hardened Armor", "Volatile Armor"] },
+              { name: "Dark Talons", morphs: ["Burning Talons", "Choking Talons"] },
+              { name: "Dragon Blood", morphs: ["Green Dragon Blood", "Coagulating Blood"] },
+              { name: "Magma Armor", morphs: ["Magma Shell", "Corrosive Armor"] }
+            ]
+          },
+          "Earthen Heart": {
+            skills: [
+              { name: "Stone Giant", morphs: ["Stonefist", "Stone Giant"] },
+              { name: "Inhale", morphs: ["Draw Essence", "Deep Breath"] },
+              { name: "Molten Weapons", morphs: ["Igneous Weapons", "Molten Armaments"] },
+              { name: "Magma Armor Support", morphs: ["Magma Shell", "Corrosive Armor"] }
+            ]
+          }
+        }
+      },
+      Sorcerer: {
+        classLines: {
+          "Dark Magic": {
+            skills: [
+              { name: "Crystal Shard", morphs: ["Crystal Fragments", "Crystal Weapon"] },
+              { name: "Encase", morphs: ["Restraining Prison", "Shattering Prison"] },
+              { name: "Rune Prison", morphs: ["Defensive Rune", "Rune Cage"] },
+              { name: "Negate Magic", morphs: ["Absorption Field", "Suppression Field"] }
+            ]
+          },
+          "Daedric Summoning": {
+            skills: [
+              { name: "Summon Unstable Familiar", morphs: ["Unstable Familiar", "Volatile Familiar"] },
+              { name: "Summon Winged Twilight", morphs: ["Twilight Matriarch", "Twilight Tormentor"] },
+              { name: "Bound Armor", morphs: ["Bound Aegis", "Bound Armaments"] },
+              { name: "Summon Storm Atronach", morphs: ["Greater Storm Atronach", "Charged Atronach"] }
+            ]
+          },
+          "Storm Calling": {
+            skills: [
+              { name: "Lightning Form", morphs: ["Hurricane", "Boundless Storm"] },
+              { name: "Surge", morphs: ["Critical Surge", "Power Surge"] },
+              { name: "Mage's Fury", morphs: ["Endless Fury", "Mage's Wrath"] },
+              { name: "Overload", morphs: ["Energy Overload", "Power Overload"] }
+            ]
+          }
+        }
+      },
+      Nightblade: {
+        classLines: {
+          Assassination: {
+            skills: [
+              { name: "Assassin's Blade", morphs: ["Killer's Blade", "Impale"] },
+              { name: "Teleport Strike", morphs: ["Ambush", "Lotus Fan"] },
+              { name: "Blur", morphs: ["Mirage", "Phantasmal Escape"] },
+              { name: "Death Stroke", morphs: ["Incapacitating Strike", "Soul Harvest"] }
+            ]
+          },
+          Shadow: {
+            skills: [
+              { name: "Veiled Strike", morphs: ["Concealed Weapon", "Surprise Attack"] },
+              { name: "Path of Darkness", morphs: ["Refreshing Path", "Twisting Path"] },
+              { name: "Aspect of Terror", morphs: ["Mass Hysteria", "Manifestation of Terror"] },
+              { name: "Consuming Darkness", morphs: ["Veil of Blades", "Bolstering Darkness"] }
+            ]
+          },
+          Siphoning: {
+            skills: [
+              { name: "Strife", morphs: ["Swallow Soul", "Funnel Health"] },
+              { name: "Siphoning Strikes", morphs: ["Leeching Strikes", "Siphoning Attacks"] },
+              { name: "Drain Power", morphs: ["Power Extraction", "Sap Essence"] },
+              { name: "Soul Shred", morphs: ["Soul Tether", "Soul Siphon"] }
+            ]
+          }
+        }
+      },
+      Templar: {
+        classLines: {
+          "Aedric Spear": {
+            skills: [
+              { name: "Puncturing Strikes", morphs: ["Biting Jabs", "Puncturing Sweep"] },
+              { name: "Piercing Javelin", morphs: ["Aurora Javelin", "Binding Javelin"] },
+              { name: "Focused Charge", morphs: ["Explosive Charge", "Toppling Charge"] },
+              { name: "Radial Sweep", morphs: ["Empowering Sweep", "Crescent Sweep"] }
+            ]
+          },
+          "Dawn's Wrath": {
+            skills: [
+              { name: "Sun Fire", morphs: ["Reflective Light", "Vampire's Bane"] },
+              { name: "Backlash", morphs: ["Power of the Light", "Purifying Light"] },
+              { name: "Solar Flare", morphs: ["Dark Flare", "Solar Barrage"] },
+              { name: "Nova", morphs: ["Solar Prison", "Practiced Incantation"] }
+            ]
+          },
+          "Restoring Light": {
+            skills: [
+              { name: "Rushed Ceremony", morphs: ["Breath of Life", "Honor the Dead"] },
+              { name: "Cleansing Ritual", morphs: ["Extended Ritual", "Ritual of Retribution"] },
+              { name: "Rune Focus", morphs: ["Channeled Focus", "Restoring Focus"] },
+              { name: "Rite of Passage", morphs: ["Practiced Incantation", "Remembrance"] }
+            ]
+          }
+        }
+      },
+      Warden: {
+        classLines: {
+          "Animal Companions": {
+            skills: [
+              { name: "Dive", morphs: ["Cutting Dive", "Screaming Cliff Racer"] },
+              { name: "Swarm", morphs: ["Fetcher Infection", "Growing Swarm"] },
+              { name: "Falcon's Swiftness", morphs: ["Bird of Prey", "Deceptive Predator"] },
+              { name: "Feral Guardian", morphs: ["Eternal Guardian", "Wild Guardian"] }
+            ]
+          },
+          "Green Balance": {
+            skills: [
+              { name: "Healing Seed", morphs: ["Budding Seeds", "Corrupting Pollen"] },
+              { name: "Betty Netch", morphs: ["Blue Betty", "Bull Netch"] },
+              { name: "Nature's Grasp", morphs: ["Nature's Embrace", "Bursting Vines"] },
+              { name: "Secluded Grove", morphs: ["Healing Thicket", "Enchanted Forest"] }
+            ]
+          },
+          "Winter's Embrace": {
+            skills: [
+              { name: "Frost Cloak", morphs: ["Expansive Frost Cloak", "Ice Fortress"] },
+              { name: "Arctic Wind", morphs: ["Arctic Blast", "Polar Wind"] },
+              { name: "Impaling Shards", morphs: ["Gripping Shards", "Winter's Revenge"] },
+              { name: "Sleet Storm", morphs: ["Northern Storm", "Permafrost"] }
+            ]
+          }
+        }
+      },
+      Necromancer: {
+        classLines: {
+          "Grave Lord": {
+            skills: [
+              { name: "Flame Skull", morphs: ["Ricochet Skull", "Venom Skull"] },
+              { name: "Blastbones", morphs: ["Blighted Blastbones", "Stalking Blastbones"] },
+              { name: "Boneyard", morphs: ["Avid Boneyard", "Unnerving Boneyard"] },
+              { name: "Frozen Colossus", morphs: ["Pestilent Colossus", "Glacial Colossus"] }
+            ]
+          },
+          "Bone Tyrant": {
+            skills: [
+              { name: "Bone Armor", morphs: ["Beckoning Armor", "Summoner's Armor"] },
+              { name: "Bitter Harvest", morphs: ["Deaden Pain", "Necrotic Potency"] },
+              { name: "Bone Totem", morphs: ["Agony Totem", "Remote Totem"] },
+              { name: "Bone Goliath Transformation", morphs: ["Pummeling Goliath", "Ravenous Goliath"] }
+            ]
+          },
+          "Living Death": {
+            skills: [
+              { name: "Render Flesh", morphs: ["Resistant Flesh", "Blood Sacrifice"] },
+              { name: "Spirit Mender", morphs: ["Intensive Mender", "Spirit Guardian"] },
+              { name: "Expunge", morphs: ["Expunge and Modify", "Hexproof"] },
+              { name: "Renewing Animation", morphs: ["Animate Blastbones", "Renewing Animation"] }
+            ]
+          }
+        }
+      },
+      Arcanist: {
+        classLines: {
+          "Herald of the Tome": {
+            skills: [
+              { name: "Runeblades", morphs: ["Escalating Runeblades", "Cephaliarch's Flail"] },
+              { name: "Fatecarver", morphs: ["Pragmatic Fatecarver", "Exhausting Fatecarver"] },
+              { name: "Abyssal Impact", morphs: ["Tentacular Dread", "The Languid Eye"] },
+              { name: "The Unblinking Eye", morphs: ["The Tide King's Gaze", "The Unblinking Eye"] }
+            ]
+          },
+          "Soldier of Apocrypha": {
+            skills: [
+              { name: "Cruxweaver Armor", morphs: ["Runeguard of Freedom", "Cruxweaver Armor"] },
+              { name: "Runic Jolt", morphs: ["Runic Sunder", "Runic Defense"] },
+              { name: "Aegis of the Unseen", morphs: ["Spiteward of the Lucid Mind", "Gibbering Shelter"] },
+              { name: "Sanctum of the Abyssal Sea", morphs: ["Gibbering Shield", "Sanctum of the Abyssal Sea"] }
+            ]
+          },
+          "Curative Runeforms": {
+            skills: [
+              { name: "Curative Runeforms", morphs: ["Runemend", "Arcanist's Domain"] },
+              { name: "Healing Portal", morphs: ["Reconstructive Domain", "Zenas' Empowering Disc"] },
+              { name: "Chakram Shields", morphs: ["Runic Defense", "Chakram of Destiny"] },
+              { name: "Tome-Bearer's Inspiration", morphs: ["Glyphic of the Tides", "Tome-Bearer's Inspiration"] }
+            ]
+          }
+        }
+      }
+    };
+
+    const CLASSES = {
+      Dragonknight: {
+        overview: "Durable front-line class with strong tanking, pressure, and attrition tools.",
+        strengths: ["Reliable survivability", "Strong staggered pressure", "Good tank utility"],
+        playstyles: ["Tank", "Stamina DPS", "PvP bruiser"],
+        skillThemes: ["Fiery pressure", "Poison or flame DoT", "Battle sustain", "Control tool"]
+      },
+      Sorcerer: {
+        overview: "Burst-focused caster with mobility, shields, and pet or heavy attack options.",
+        strengths: ["Burst damage", "Mobility", "Shielding"],
+        playstyles: ["Magicka DPS", "Burst PvP", "Heavy Attack"],
+        skillThemes: ["Shock burst", "Shielding", "Mobility", "Execution pressure"]
+      },
+      Nightblade: {
+        overview: "Precision-based damage dealer with stealth, crit, and strong single-target finishing power.",
+        strengths: ["Critical damage", "Stealth", "Single-target pressure"],
+        playstyles: ["Assassin", "Stamina DPS", "Skirmisher"],
+        skillThemes: ["Shadow burst", "Crit timing", "Siphoning sustain", "Execution"]
+      },
+      Templar: {
+        overview: "Balanced holy warrior with strong healing, support tools, and simple offensive pressure.",
+        strengths: ["Healing output", "Group utility", "Stable rotations"],
+        playstyles: ["Healer", "Magicka DPS", "Support PvP"],
+        skillThemes: ["Radiant pressure", "Spear damage", "Support healing", "Buffs"]
+      },
+      Warden: {
+        overview: "Flexible nature-themed class with support, frost control, and survivability.",
+        strengths: ["Support utility", "Defensive power", "Flexible roles"],
+        playstyles: ["Healer", "Tank", "Frost DPS"],
+        skillThemes: ["Frost control", "Animal pressure", "Sustain healing", "Group support"]
+      },
+      Necromancer: {
+        overview: "Corpse-based utility class with layered pressure, durability, and group support value.",
+        strengths: ["Corpse synergy", "Support debuffs", "Attrition control"],
+        playstyles: ["Tank", "Utility DPS", "Support"],
+        skillThemes: ["Corpse synergy", "Bone utility", "DoTs", "Ultimate generation"]
+      },
+      Arcanist: {
+        overview: "Modern beam and crux-driven class with strong shields, utility, and scalable damage.",
+        strengths: ["Beam damage", "Shielding", "Flexible utility"],
+        playstyles: ["Magicka DPS", "Hybrid", "Tank"],
+        skillThemes: ["Beam pressure", "Crux generation", "Shielding", "Debuff utility"]
+      }
+    };
+
+    const RACES = ["High Elf", "Dark Elf", "Khajiit", "Orc", "Nord", "Breton", "Argonian", "Wood Elf", "Imperial", "Redguard"];
+    const ALLIANCES = ["Aldmeri Dominion", "Daggerfall Covenant", "Ebonheart Pact"];
+    const ROLES = ["DPS", "Tank", "Healer", "Hybrid"];
+    const CONTENT_TYPES = ["PvE", "PvP", "Trials", "Dungeons", "Casual Guild Runs"];
+    const MODES = ["Solo", "Group", "Competitive"];
+    const ARMOR_WEIGHTS = ["Light", "Medium", "Heavy", "Mixed"];
+    const WEAPONS = ["Inferno Staff", "Lightning Staff", "Ice Staff", "Restoration Staff", "Dual Wield", "Two-Handed", "Sword & Shield", "Bow"];
+    const GEAR_SLOTS = ["Head", "Shoulders", "Chest", "Hands", "Waist", "Legs", "Feet", "Necklace", "Ring 1", "Ring 2", "Front Weapon", "Back Weapon"];
+    const TRAITS = ["Training", "Divines", "Infused", "Precise", "Sharpened", "Reinforced", "Well-Fitted", "Sturdy", "Nirnhoned"];
+    const ENCHANTS = ["Max Magicka", "Max Stamina", "Max Health", "Weapon Damage", "Spell Damage", "Prismatic Defense", "Absorb Stamina", "Absorb Magicka"];
+        const SKILL_SLOTS = [1,2,3,4,5,"Ultimate"];
+
+    const CRAFTING = {
+      "Blacksmithing": {
+        materials: ["Iron Ore → Iron Ingot", "High Iron Ore → Steel Ingot", "Orichalcum Ore → Orichalc Ingot", "Dwarven Ore → Dwarven Ingot", "Ebony Ore → Ebony Ingot", "Calcinium Ore → Calcinium Ingot", "Galatite Ore → Galatite Ingot", "Quicksilver Ore → Quicksilver Ingot", "Voidstone Ore → Voidsteel Ingot", "Rubedite Ore → Rubedite Ingot"],
+        tips: ["Deconstruct dropped weapons and heavy armor", "Keep research active at all times", "Do daily writs for steady progression", "Refine ore before selling extras"]
+      },
+      "Clothing": {
+        materials: ["Raw Jute → Jute", "Flax → Linen", "Cotton", "Spidersilk", "Ebonthread", "Kresh Fiber", "Ironthread", "Silverweave", "Shadowspun", "Ancestor Silk", "Rawhide → Rubedo Leather"],
+        tips: ["Harvest cloth and hide nodes constantly", "Deconstruct armor drops", "Research Divines and Training early", "Refine raw materials for upgrade mats"]
+      },
+      "Woodworking": {
+        materials: ["Sanded Maple", "Sanded Oak", "Sanded Beech", "Sanded Hickory", "Sanded Yew", "Sanded Birch", "Sanded Ash", "Sanded Mahogany", "Sanded Nightwood", "Sanded Ruby Ash"],
+        tips: ["Deconstruct bows, shields, and staves", "Research infused and precise first", "Keep writs going", "Harvest logs while questing"]
+      },
+      "Jewelry Crafting": {
+        materials: ["Pewter Dust → Pewter Ounce", "Copper Dust → Copper Ounce", "Silver Dust → Silver Ounce", "Electrum Dust → Electrum Ounce", "Platinum Dust → Platinum Ounce", "Terne / Iridium / Zircon / Chromium grains and platings"],
+        tips: ["Research starts slow, begin immediately", "Deconstruct unwanted jewelry", "Refine dust for upgrade materials", "Use writs to offset slow progression"]
+      },
+      "Alchemy": {
+        materials: ["Natural Water", "Clear Water", "Pristine Water", "Cleansed Water", "Filtered Water", "Purified Water", "Cloud Mist", "Star Dew", "Lorkhan's Tears", "Columbine / Bugloss / Blessed Thistle"],
+        tips: ["Level by crafting, not deconstructing", "Discover reagent traits early", "Save common reagents for batch leveling", "Gather every plant you see"]
+      },
+      "Enchanting": {
+        materials: ["Potency: Jora → Repora", "Essence: Deni / Makko / Oko / Tade", "Aspect: Ta / Jejota / Denata / Rekuta / Kuta"],
+        tips: ["Deconstruct glyphs often", "Translate unknown runes", "Save rare aspect runes for important glyphs", "Keep potency rank current"]
+      },
+      "Provisioning": {
+        materials: ["Bananas / Cheese / Meal / Seasoning", "Saltrice / Millet / Garlic / Corn", "Frost Mirriam / Bervez Juice / Perfect Roe", "Honey / Yeast / Barley / Metheglin"],
+        tips: ["Loot containers constantly", "Craft in bulk for fast levels", "Learn green and blue recipes early", "Sort recipes by level band"]
+      }
+    };
+
+    const TRAIT_TRACKS = {
+      Blacksmithing: ["Powered", "Charged", "Precise", "Infused", "Defending", "Training", "Sharpened", "Decisive", "Nirnhoned"],
+      Clothing: ["Sturdy", "Impenetrable", "Reinforced", "Well-Fitted", "Training", "Infused", "Exploration", "Divines", "Nirnhoned"],
+      Woodworking: ["Powered", "Charged", "Precise", "Infused", "Defending", "Training", "Sharpened", "Decisive", "Nirnhoned"],
+      Jewelry: ["Arcane", "Healthy", "Robust", "Triune", "Infused", "Protective", "Swift", "Harmony", "Bloodthirsty"]
+    };
+
+    const BIS_BY_ROLE = {
+      DPS: ["Recommended: Main offensive set", "Recommended: Secondary crit/proc set", "Recommended: Damage monster or mythic slot"],
+      Tank: ["Recommended: Main utility tank set", "Recommended: Defensive support set", "Recommended: Survivability monster or mythic slot"],
+      Healer: ["Recommended: Main healer support set", "Recommended: Group buff set", "Recommended: Support monster or mythic slot"],
+      Hybrid: ["Recommended: Balanced hybrid damage set", "Recommended: Utility flex set", "Recommended: Hybrid mythic or monster slot"]
+    };
+
+    const ESO_SET_DATABASE = {
+      "Spell Power Cure": { category: "support", content: ["dungeon", "trials", "pve"], buffs: ["Major Courage"], notes: "Strong healer/group support set that increases team damage.", roles: ["Healer"] },
+      "Vestment of Olorime": { category: "support", content: ["trials", "pve"], buffs: ["Major Courage"], notes: "Group damage support set, often compared with Spell Power Cure.", roles: ["Healer"] },
+      "Pillager's Profit": { category: "support", content: ["trials", "pve"], buffs: ["Ultimate Support"], notes: "Excellent raid-oriented support set.", roles: ["Healer","Tank"] },
+      "Roaring Opportunist": { category: "support", content: ["trials", "pve"], buffs: ["Major Slayer"], notes: "Boosts coordinated group damage windows.", roles: ["Healer","Support DPS"] },
+      "Powerful Assault": { category: "support", content: ["pvp","dungeons","trials","pve"], buffs: ["Weapon/Spell Damage Buff"], notes: "Flexible group support set.", roles: ["Tank","Healer","Support DPS"] },
+      "Yolnahkriin": { category: "support", content: ["trials","pve"], buffs: ["Minor Courage"], notes: "Classic tank support set.", roles: ["Tank"] },
+      "Turning Tide": { category: "support", content: ["dungeons","trials","pve"], buffs: ["Major Vulnerability"], notes: "Amplifies group burst windows.", roles: ["Tank"] },
+      "Crimson Oath's Rive": { category: "support", content: ["dungeons","trials","pve"], buffs: ["Armor Reduction"], notes: "Reduces enemy resistances.", roles: ["Tank"] },
+      "Saxhleel Champion": { category: "support", content: ["trials","pve"], buffs: ["Major Force"], notes: "High-end coordinated support set.", roles: ["Tank","Healer"] },
+      "Worm's Raiment": { category: "support", content: ["dungeons","trials","pve"], buffs: ["Magicka Sustain"], notes: "Caster sustain set.", roles: ["Healer"] },
+      "Hircine's Veneer": { category: "support", content: ["dungeons","trials","pve"], buffs: ["Stamina Sustain"], notes: "Stamina sustain set.", roles: ["Healer","Tank"] },
+      "Pearlescent Ward": { category: "support", content: ["trials","pve"], buffs: ["Group Survival","Damage Support"], notes: "Defensive support trial set.", roles: ["Tank"] },
+      "Ebon Armory": { category: "support", content: ["dungeons","pve"], buffs: ["Max Health Buff"], notes: "Classic group survivability set.", roles: ["Tank"] },
+      "Sanctuary": { category: "support", content: ["dungeons","pve"], buffs: ["Healing Done"], notes: "Boosts healing output.", roles: ["Healer"] },
+      "Gossamer": { category: "support", content: ["dungeons","pve"], buffs: ["Evasion"], notes: "Grants defensive group buffs.", roles: ["Healer"] },
+      "Hollowfang Thirst": { category: "support", content: ["dungeons","pve"], buffs: ["Magicka Restore"], notes: "Magicka sustain support set.", roles: ["Healer"] },
+      "Elemental Catalyst": { category: "support", content: ["trials","pve"], buffs: ["Critical Damage Debuff"], notes: "Boosts group crit damage.", roles: ["Support DPS"] },
+
+      "Mother's Sorrow": { category: "selfish", content: ["dungeons","pve","solo"], buffs: ["Critical Chance"], notes: "High crit DPS set.", roles: ["DPS"] },
+      "Pillar of Nirn": { category: "selfish", content: ["dungeons","pve"], buffs: ["Proc Damage"], notes: "Popular proc DPS set.", roles: ["DPS"] },
+      "Whorl of the Depths": { category: "selfish", content: ["trials","pve"], buffs: ["AoE Damage"], notes: "Trial AoE DPS set.", roles: ["DPS"] },
+      "Arms of Relequen": { category: "selfish", content: ["trials","pve"], buffs: ["Single Target Damage"], notes: "Top-tier single target DPS.", roles: ["DPS"] },
+      "Coral Riptide": { category: "selfish", content: ["trials","pve"], buffs: ["Scaling Damage"], notes: "High-risk high-reward DPS set.", roles: ["DPS"] },
+      "Order's Wrath": { category: "selfish", content: ["pve","solo","dungeons"], buffs: ["Crit Damage"], notes: "Craftable DPS set.", roles: ["DPS","Hybrid"] },
+      "Deadly Strike": { category: "selfish", content: ["pvp","pve"], buffs: ["DoT Damage"], notes: "DoT-focused DPS set.", roles: ["DPS"] },
+      "Kinras's Wrath": { category: "selfish", content: ["trials","pve"], buffs: ["Attack Speed","Damage"], notes: "Strong DPS buff uptime set.", roles: ["DPS"] },
+      "Tzogvin's Warband": { category: "selfish", content: ["dungeons","pve"], buffs: ["Crit & Minor Force"], notes: "Hybrid crit DPS set.", roles: ["DPS"] },
+      "Burning Spellweave": { category: "selfish", content: ["dungeons","pve"], buffs: ["Spell Damage"], notes: "Magicka burst set.", roles: ["DPS"] },
+      "Necropotence": { category: "selfish", content: ["pve","solo"], buffs: ["Max Magicka"], notes: "Pet build scaling set.", roles: ["DPS"] },
+
+      "Rallying Cry": { category: "support", content: ["pvp"], buffs: ["Crit Resist","Damage Buff"], notes: "PvP group support.", roles: ["Healer","Support DPS"] },
+      "Mara's Balm": { category: "selfish", content: ["pvp"], buffs: ["Cleanse","Survival"], notes: "PvP sustain/cleanse set.", roles: ["Tank","Hybrid"] },
+      "Pariah": { category: "selfish", content: ["pvp"], buffs: ["Resistance Scaling"], notes: "PvP defensive set.", roles: ["Tank"] },
+      "Heartland Conqueror": { category: "selfish", content: ["pvp","pve"], buffs: ["Trait Amplification"], notes: "Boosts weapon traits.", roles: ["Hybrid","DPS"] },
+      "Daedric Trickery": { category: "support", content: ["pvp"], buffs: ["Random Major Buffs"], notes: "PvP utility set.", roles: ["Hybrid","Support"] }
+    };
+
+    const STORAGE_KEY = "eso-multi-character-builder-v2";
+
+    function uid() { return Math.random().toString(36).slice(2, 10); }
+
+    function makeSkillSlot() { return { line: "", baseName: "", name: "", morph: "", customName: "" }; }
+    function makeBar() { return { weapon: WEAPONS[0], slots: SKILL_SLOTS.map(() => makeSkillSlot()) }; }
+    function makeGearSlot(slot) { return { slot, set: "", trait: TRAITS[0], enchant: ENCHANTS[0] }; }
+
+    function defaultCharacter(name = "New Character") {
+      return {
+        id: uid(),
+        name,
+        className: "Dragonknight",
+        race: "High Elf",
+        alliance: ALLIANCES[0],
+        role: "DPS",
+        contentType: "PvE",
+        mode: "Group",
+        armorWeight: "Light",
+        notes: "",
+        attributes: { health: 0, magicka: 64, stamina: 0 },
+        cp: { warfare: 0, fitness: 0, craft: 0 },
+        bars: { front: makeBar(), back: makeBar() },
+        gear: Object.fromEntries(GEAR_SLOTS.map(slot => [slot, makeGearSlot(slot)])),
+        crafting: Object.fromEntries(Object.keys(CRAFTING).map(name => [name, { level: 1 }])),
+        traitResearch: Object.fromEntries(Object.entries(TRAIT_TRACKS).map(([line, traits]) => [line, traits.map(name => ({ name, known: false, timer: "" }))])),
+        guild: { customNotes: "" }
+      };
+    }
+
+    const state = {
+      beginnerMode: true,
+      activeMainTab: "builder",
+      activeBuilderSubtab: "identity",
+      activeCraftingTab: "Blacksmithing",
+      activeCharacterId: null,
+      characters: [defaultCharacter("Nightblade DPS")]
+    };
+    state.activeCharacterId = state.characters[0].id;
+
+    const el = {};
+
+    function currentCharacter() {
+      return state.characters.find(c => c.id === state.activeCharacterId) || state.characters[0];
+    }
+
+    function setStatus(message) { el.statusMessage.textContent = message; }
+
+    function saveAll() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state }));
+      } catch (e) {
+        setStatus("Unable to save locally in this browser environment.");
+      }
+    }
+
+    function loadSaved() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return false;
+        const parsed = JSON.parse(raw);
+        if (!parsed.characters?.length) return false;
+        Object.assign(state, parsed);
+        return true;
+      } catch (e) { return false; }
+    }
+
+    function syncShareableFromUrl() {
+      const url = new URL(window.location.href);
+      const encoded = url.searchParams.get("build");
+      if (!encoded) return false;
+      try {
+        const parsed = JSON.parse(decodeURIComponent(escape(atob(encoded))));
+        if (!parsed?.character) return false;
+        const incoming = parsed.character;
+        incoming.id = uid();
+        state.characters = [incoming];
+        state.activeCharacterId = incoming.id;
+        if (parsed.activeMainTab) state.activeMainTab = parsed.activeMainTab;
+        if (parsed.activeBuilderSubtab) state.activeBuilderSubtab = parsed.activeBuilderSubtab;
+        if (parsed.activeCraftingTab) state.activeCraftingTab = parsed.activeCraftingTab;
+        return true;
+      } catch (e) { return false; }
+    }
+
+    function createShareLink() {
+      const payload = {
+        character: currentCharacter(),
+        activeMainTab: state.activeMainTab,
+        activeBuilderSubtab: state.activeBuilderSubtab,
+        activeCraftingTab: state.activeCraftingTab
+      };
+      const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+      const url = new URL(window.location.href);
+      url.searchParams.set("build", encoded);
+      return url.toString();
+    }
+
+    function populateStaticSelects() {
+      [
+        [el.classSelect, Object.keys(CLASSES)],
+        [el.raceSelect, RACES],
+        [el.allianceSelect, ALLIANCES],
+        [el.roleSelect, ROLES],
+        [el.contentTypeSelect, CONTENT_TYPES],
+        [el.modeSelect, MODES],
+        [el.armorWeightSelect, ARMOR_WEIGHTS],
+        [el.frontWeaponSelect, WEAPONS],
+        [el.backWeaponSelect, WEAPONS]
+      ].forEach(([select, items]) => {
+        select.innerHTML = "";
+        items.forEach(v => select.add(new Option(v, v)));
+      });
+    }
+
+    function renderCharacterTabs() {
+      el.characterTabs.innerHTML = "";
+      state.characters.forEach(char => {
+        const btn = document.createElement("button");
+        btn.className = "char-tab" + (char.id === state.activeCharacterId ? " active" : "");
+        btn.innerHTML = `<span>${char.name}</span><small>${char.className}</small>`;
+        btn.addEventListener("click", () => {
+          state.activeCharacterId = char.id;
+          renderAll();
+          setStatus(`Switched to ${char.name}.`);
+        });
+        el.characterTabs.appendChild(btn);
+      });
+    }
+
+    function renderMainTabs() {
+      document.querySelectorAll("#mainTabs .tab").forEach(btn => btn.classList.toggle("active", btn.dataset.tab === state.activeMainTab));
+      ["builder", "bis", "crafting", "traits", "guild"].forEach(tab => {
+        document.getElementById(`tab-${tab}`).classList.toggle("hidden", tab !== state.activeMainTab);
+      });
+    }
+
+    function renderBuilderSubtabs() {
+      document.querySelectorAll("#builderTabs .subtab").forEach(btn => btn.classList.toggle("active", btn.dataset.builderTab === state.activeBuilderSubtab));
+      ["identity", "attributes", "skills", "gear"].forEach(tab => {
+        document.getElementById(`builder-subtab-${tab}`).classList.toggle("hidden", tab !== state.activeBuilderSubtab);
+      });
+    }
+
+    function renderCraftingTabs() {
+      el.craftingTabs.innerHTML = "";
+      Object.keys(CRAFTING).forEach(name => {
+        const btn = document.createElement("button");
+        btn.className = "subtab" + (name === state.activeCraftingTab ? " active" : "");
+        btn.textContent = name;
+        btn.addEventListener("click", () => {
+          state.activeCraftingTab = name;
+          renderCraftingPanel();
+          saveAll();
+        });
+        el.craftingTabs.appendChild(btn);
+      });
+    }
+
+    function renderIdentity() {
+      const c = currentCharacter();
+
+      document.body.classList.remove(
+        "class-theme-dragonknight",
+        "class-theme-sorcerer",
+        "class-theme-nightblade",
+        "class-theme-templar",
+        "class-theme-warden",
+        "class-theme-necromancer",
+        "class-theme-arcanist"
+      );
+
+      const themeClass = `class-theme-${c.className.toLowerCase()}`;
+      document.body.classList.add(themeClass);
+
+      el.classSelect.value = c.className;
+      el.raceSelect.value = c.race;
+      el.allianceSelect.value = c.alliance;
+      el.roleSelect.value = c.role;
+      el.contentTypeSelect.value = c.contentType;
+      el.modeSelect.value = c.mode;
+      el.armorWeightSelect.value = c.armorWeight;
+      el.characterNotes.value = c.notes;
+
+      const cls = CLASSES[c.className];
+      el.classOverview.innerHTML = `
+        <div class="icon-grid">
+          <div class="icon-card"><div class="section-icon">✦</div><div><strong>${c.className}</strong><div class="muted-small">Primary class identity</div></div></div>
+          <div class="icon-card"><div class="section-icon">⚑</div><div><strong>${c.role}</strong><div class="muted-small">Current role focus</div></div></div>
+          <div class="icon-card"><div class="section-icon">☾</div><div><strong>${c.contentType}</strong><div class="muted-small">Target content</div></div></div>
+          <div class="icon-card"><div class="section-icon">⛨</div><div><strong>${c.armorWeight}</strong><div class="muted-small">Armor profile</div></div></div>
+        </div>
+        <div style="margin-top:12px;">${cls.overview}</div>`;
+
+      renderSimpleList(el.classStrengths, cls.strengths);
+      renderSimpleList(el.classPlaystyles, cls.playstyles);
+      el.summaryGrid.innerHTML = "";
+      [["Name", c.name], ["Class", c.className], ["Race", c.race], ["Alliance", c.alliance], ["Role", c.role], ["Focus", c.contentType]].forEach(([label, value]) => {
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = `<span class="small-label">${label}</span><div>${value}</div>`;
+        el.summaryGrid.appendChild(div);
+      });
+      el.renameCharacterName.value = c.name;
+    }
+
+    function renderAttributes() {
+      const c = currentCharacter();
+      el.attrHealth.value = c.attributes.health;
+      el.attrMagicka.value = c.attributes.magicka;
+      el.attrStamina.value = c.attributes.stamina;
+      el.cpWarfare.value = c.cp.warfare;
+      el.cpFitness.value = c.cp.fitness;
+      el.cpCraft.value = c.cp.craft;
+    }
+
+    function renderSkills() {
+      const c = currentCharacter();
+      el.frontWeaponSelect.value = c.bars.front.weapon;
+      el.backWeaponSelect.value = c.bars.back.weapon;
+      renderBarSlots(el.frontSkillSlots, c.bars.front, "front");
+      renderBarSlots(el.backSkillSlots, c.bars.back, "back");
+    }
+
+    function getSkillCatalogForClass(className) {
+      const classData = FULL_SKILL_DATA[className];
+      if (!classData) return [];
+      return Object.entries(classData.classLines).flatMap(([lineName, lineData]) =>
+        lineData.skills.map(skill => ({ line: lineName, ...skill }))
+      );
+    }
+
+    function renderBarSlots(container, bar, side) {
+      container.innerHTML = "";
+      const catalog = getSkillCatalogForClass(currentCharacter().className);
+      const skillOptions = [{ line: "", name: "", morphs: [] }].concat(catalog, [{ line: "Custom", name: "Custom Skill", morphs: [] }]);
+
+      SKILL_SLOTS.forEach((slotName, idx) => {
+        const slot = bar.slots[idx];
+        const matched = catalog.find(s => s.name === slot.baseName || s.name === slot.name);
+        const selectedValue = matched ? matched.name : (slot.customName || slot.name ? "Custom Skill" : "");
+        const morphOptions = matched ? matched.morphs : (slot.morph ? [slot.morph] : []);
+        const customValue = slot.customName || (!matched ? slot.name : "");
+        const wrap = document.createElement("div");
+        wrap.className = "slot-item";
+        wrap.innerHTML = `
+          <div class="slot-title">${slotName === 'Ultimate' ? 'Ultimate' : `Skill ${slotName}`}</div>
+          <div class="grid-2">
+            <div>
+              <span class="small-label">Class Skill</span>
+              <select data-side="${side}" data-slot="${idx}" data-type="skill-select">
+                ${skillOptions.map(skill => `<option value="${skill.name}" ${selectedValue===skill.name?'selected':''}>${skill.name ? `${skill.line ? `${skill.line} — ` : ""}${skill.name}` : 'Select skill'}</option>`).join("")}
+              </select>
+            </div>
+            <div>
+              <span class="small-label">Morph</span>
+              <select data-side="${side}" data-slot="${idx}" data-type="morph-select">
+                <option value="">Select morph</option>
+                ${morphOptions.map(m => `<option value="${m}" ${slot.morph===m?'selected':''}>${m}</option>`).join("")}
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:10px; ${selectedValue === 'Custom Skill' ? '' : 'display:none;'}">
+            <span class="small-label">Custom Skill Name</span>
+            <input data-side="${side}" data-slot="${idx}" data-type="custom-name" value="${customValue}" placeholder="Enter custom skill" />
+          </div>
+        `;
+        container.appendChild(wrap);
+      });
+    }
+
+    function renderGear() {
+      const c = currentCharacter();
+      const analyzed = analyzeEquippedSets(c);
+      el.gearSlots.innerHTML = "";
+      GEAR_SLOTS.forEach(slot => {
+        const item = c.gear[slot];
+        const matchedSet = (item.set || "").trim() ? analyzed.recognizedSets.find(set => normalizeSetName(set.setName) === normalizeSetName(item.set)) : null;
+        const setStatus = matchedSet
+          ? (matchedSet.recognized
+              ? `${matchedSet.isFivePieceActive ? "5-piece active" : `${matchedSet.pieces}/5 pieces`} · ${matchedSet.data.category}`
+              : "Custom / unrecognized set")
+          : "No set entered";
+        const statusClass = !matchedSet
+          ? "warn"
+          : matchedSet.recognized
+            ? (matchedSet.isFivePieceActive ? "good" : "warn")
+            : "bad";
+        const datalistId = `set-options-${slot.replace(/[^a-z0-9]/gi, "-").toLowerCase()}`;
+        const wrap = document.createElement("div");
+        wrap.className = "card";
+        wrap.innerHTML = `
+          <div class="slot-title"><span class="slot-icon-badge">${slot === 'Head' ? '◔' : slot === 'Shoulders' ? '◕' : slot === 'Chest' ? '▣' : slot === 'Hands' ? '✋' : slot === 'Waist' ? '⎍' : slot === 'Legs' ? '∥' : slot === 'Feet' ? '⌖' : slot === 'Necklace' ? '◈' : slot.includes('Ring') ? '◌' : slot === 'Front Weapon' ? '⚔' : '☄'}</span>${slot}</div>
+          <span class="small-label">Set</span>
+          <input list="${datalistId}" data-gear-slot="${slot}" data-gear-field="set" value="${item.set}" placeholder="Set name" />
+          <datalist id="${datalistId}">
+            ${Object.keys(ESO_SET_DATABASE).sort().map(setName => `<option value="${setName}"></option>`).join("")}
+          </datalist>
+          <div style="margin-top:8px;"><span class="mini-pill ${statusClass}">${setStatus}</span></div>
+          <div class="grid-2" style="margin-top:10px;">
+            <div>
+              <span class="small-label">Trait</span>
+              <select data-gear-slot="${slot}" data-gear-field="trait">${TRAITS.map(t => `<option ${item.trait===t?'selected':''}>${t}</option>`).join("")}</select>
+            </div>
+            <div>
+              <span class="small-label">Enchantment</span>
+              <select data-gear-slot="${slot}" data-gear-field="enchant">${ENCHANTS.map(t => `<option ${item.enchant===t?'selected':''}>${t}</option>`).join("")}</select>
+            </div>
+          </div>
+        `;
+        el.gearSlots.appendChild(wrap);
+      });
+    }
+
+    function normalizeSetName(name) {
+      return (name || "").trim().toLowerCase();
+    }
+
+    function findSetData(name) {
+      const normalized = normalizeSetName(name);
+      return Object.entries(ESO_SET_DATABASE).find(([setName]) => normalizeSetName(setName) === normalized) || null;
+    }
+
+    function analyzeEquippedSets(character) {
+      const equippedItems = Object.values(character.gear);
+      const setCounts = equippedItems.reduce((acc, item) => {
+        const setName = (item.set || "").trim();
+        if (!setName) return acc;
+        acc[setName] = (acc[setName] || 0) + 1;
+        return acc;
+      }, {});
+
+      const recognizedSets = Object.entries(setCounts).map(([setName, pieces]) => {
+        const found = findSetData(setName);
+        return {
+          setName,
+          pieces,
+          recognized: !!found,
+          data: found ? found[1] : null,
+          isFivePieceActive: pieces >= 5
+        };
+      }).sort((a, b) => b.pieces - a.pieces);
+
+      const overlappingBuffs = {};
+      recognizedSets.forEach(set => {
+        if (!set.isFivePieceActive) return;
+        (set.data?.buffs || []).forEach(buff => {
+          overlappingBuffs[buff] = overlappingBuffs[buff] || [];
+          overlappingBuffs[buff].push(set.setName);
+        });
+      });
+
+      const duplicateBuffs = Object.entries(overlappingBuffs).filter(([, sets]) => sets.length > 1);
+      return { recognizedSets, duplicateBuffs, setCounts };
+    }
+
+    function normalizeContentKey(value) {
+      const key = (value || "").trim().toLowerCase();
+      if (key === "dungeons") return "dungeon";
+      if (key === "casual guild runs") return "pve";
+      return key;
+    }
+
+    function renderBIS() {
+      const c = currentCharacter();
+      const roleSets = BIS_BY_ROLE[c.role] || BIS_BY_ROLE.DPS;
+      const equippedItems = Object.values(c.gear);
+      const emptySlots = equippedItems.filter(item => !(item.set || "").trim()).map(item => item.slot);
+      const traitGaps = equippedItems.filter(item => !item.trait || !item.enchant).map(item => item.slot);
+      const analyzed = analyzeEquippedSets(c);
+      const recognized = analyzed.recognizedSets.filter(set => set.recognized);
+      const unrecognized = analyzed.recognizedSets.filter(set => !set.recognized).map(set => set.setName);
+
+      const recommendations = [];
+      if (!analyzed.recognizedSets.length) {
+        recommendations.push(`You do not have recognized named sets filled in yet, so the builder is falling back to role-based recommendations for ${c.role}.`);
+      } else {
+        analyzed.recognizedSets.forEach(set => {
+          if (set.recognized) {
+            recommendations.push(`${set.setName} (${set.pieces} pieces) is recognized as a ${set.data.category} set. ${set.data.notes} ${set.isFivePieceActive ? "Its 5-piece bonus is active." : "Its 5-piece bonus is not active yet."}`);
+          } else {
+            recommendations.push(`${set.setName} (${set.pieces} pieces) is not in the current internal set database yet, so it is being treated as an unknown custom set.`);
+          }
+        });
+      }
+
+      recognized.forEach(set => {
+        if (!set.isFivePieceActive) {
+          recommendations.push(`${set.setName} is recognized but only has ${set.pieces}/5 pieces equipped, so its main set bonus is not active yet.`);
+        }
+        const data = set.data;
+        const contentKey = normalizeContentKey(c.contentType);
+        if (!data.content.includes(contentKey)) {
+          recommendations.push(`${set.setName} is recognized, but it is not one of the strongest fits for ${c.contentType.toLowerCase()}-focused content.`);
+        }
+        if (data.category === "support" && c.role === "DPS") {
+          recommendations.push(`${set.setName} is a support-oriented set. That can be valuable, but it may lower personal DPS if this character is meant to be fully selfish damage.`);
+        }
+        if (data.category === "selfish" && (c.role === "Healer" || c.role === "Tank")) {
+          recommendations.push(`${set.setName} is a selfish set. Consider whether that reduces your group value for a ${c.role.toLowerCase()} role.`);
+        }
+      });
+
+      analyzed.duplicateBuffs.forEach(([buff, sets]) => {
+        recommendations.push(`Overlapping buff coverage detected: ${buff} appears across ${sets.join(", ")}. You may be duplicating value that could be replaced with another useful bonus.`);
+      });
+
+      if (emptySlots.length) {
+        recommendations.push(`These slots still need set assignments: ${emptySlots.join(", ")}. Fill them before locking in a final Best-in-Slot plan.`);
+      }
+      if (traitGaps.length) {
+        recommendations.push(`These slots should be reviewed for trait/enchantment optimization: ${traitGaps.join(", ")}.`);
+      }
+      if (unrecognized.length) {
+        recommendations.push(`Unrecognized set names currently entered: ${unrecognized.join(", ")}. They can still be used, but advanced support/selfish and buff logic will be limited for them.`);
+      }
+
+      const bisNotes = [
+        `Recommended Build – Not Final. These suggestions are based on your current role, content focus, and recognized ESO set names currently equipped.`,
+        c.contentType === "Trials"
+          ? "Trial recommendations favor support coverage, raid utility, and avoiding duplicated buffs across sets."
+          : c.contentType === "Dungeons"
+          ? "Dungeon recommendations balance group utility and personal throughput, since small-group content often rewards flexible builds."
+          : c.contentType === "PvP"
+          ? "PvP recommendations favor survivability, burst timing, and defensive/offensive set flexibility."
+          : `Recommendations for ${c.contentType.toLowerCase()} balance your current gear direction and your current role.`,
+        recognized.some(set => set.data.category === "support")
+          ? "Support-oriented equipped sets are being preserved where they improve group synergy."
+          : "No recognized support set is currently equipped, so the engine is leaning more heavily on role defaults and personal performance recommendations."
+      ];
+
+      const roleDriven = roleSets.map(setNote => {
+        if (recognized.length >= 1) {
+          return `${setNote} — Recommendation based on your ${c.role} role while respecting your current recognized set path.`;
+        }
+        return `${setNote} — Recommendation based on role and content focus.`;
+      });
+
+      renderSimpleList(el.bisSets, roleDriven.concat(recommendations));
+      if (state.beginnerMode) {
+        bisNotes.unshift("New player tip: use this page to understand whether your current set direction makes sense before chasing a perfect endgame loadout.");
+      }
+      renderSimpleList(el.bisNotes, bisNotes);
+    }
+
+    function renderCraftingPanel() {
+      const c = currentCharacter();
+      const line = state.activeCraftingTab;
+      const info = CRAFTING[line];
+      const prof = c.crafting[line];
+      el.craftingHeading.textContent = line;
+      el.craftingLevelInput.value = prof.level;
+      el.craftingSummary.textContent = `${line} is currently level ${prof.level} on this character. ${prof.level < 20 ? "Beginner stage — focus on deconstruction, gathering, and basic writs." : prof.level < 40 ? "Mid stage — push writs, refining, and target research." : "High stage — optimize research completion, gold mats, and guild contribution."}`;
+      el.craftingStage.textContent = prof.level < 20 ? "Beginner" : prof.level < 40 ? "Mid" : "Endgame";
+      renderSimpleList(el.craftingMaterials, info.materials);
+      renderSimpleList(el.craftingTips, info.tips);
+      el.craftingContribution.textContent = `${line} contributes to guild support through material generation, item crafting, and long-term research utility.`;
+    }
+
+    function renderTraitResearch() {
+      const c = currentCharacter();
+      el.traitResearchGrid.innerHTML = "";
+      Object.entries(c.traitResearch).forEach(([line, traits]) => {
+        const wrap = document.createElement("div");
+        wrap.className = "card";
+        wrap.innerHTML = `<h3>${line}</h3><div class="list-clean">${traits.map((trait, idx) => `
+          <div class="list-item">
+            <div class="inline" style="justify-content:space-between;">
+              <label><input type="checkbox" data-trait-line="${line}" data-trait-index="${idx}" data-trait-field="known" ${trait.known ? 'checked' : ''}/> ${trait.name}</label>
+              <span class="mini-pill ${trait.known ? 'good' : 'warn'}">${trait.known ? 'Known' : 'Unknown'}</span>
+            </div>
+            <div style="margin-top:8px;">
+              <span class="small-label">Research Timer</span>
+              <input data-trait-line="${line}" data-trait-index="${idx}" data-trait-field="timer" value="${trait.timer}" placeholder="e.g. 14h 20m" />
+            </div>
+          </div>
+        `).join("")}</div>`;
+        el.traitResearchGrid.appendChild(wrap);
+      });
+    }
+
+    function computeGuildScores() {
+      const c = currentCharacter();
+      const analyzed = analyzeEquippedSets(c);
+      const gearSets = Object.values(c.gear).map(g => g.set).filter(Boolean);
+      const uniqueSets = new Set(gearSets).size;
+      const frontSkills = c.bars.front.slots.filter(s => s.name).length;
+      const backSkills = c.bars.back.slots.filter(s => s.name).length;
+      const totalSkills = frontSkills + backSkills;
+      const supportSkillHits = [...c.bars.front.slots, ...c.bars.back.slots].filter(s => /heal|buff|shield|support|cleanse|ward|taunt|debuff/i.test(s.name)).length;
+      const ccHits = [...c.bars.front.slots, ...c.bars.back.slots].filter(s => /stun|root|pull|fear|immobil|control/i.test(s.name)).length;
+      const dpsHits = [...c.bars.front.slots, ...c.bars.back.slots].filter(s => /beam|execute|burst|dot|flame|shock|poison|bleed/i.test(s.name)).length;
+      const craftingValue = Math.round(Object.values(c.crafting).reduce((a, b) => a + b.level, 0) / Object.keys(c.crafting).length);
+      const completedGearSlots = Object.values(c.gear).filter(g => (g.set || "").trim()).length;
+      const gearCompletionBonus = Math.min(20, completedGearSlots * 1.5);
+      const recognizedSupportSets = analyzed.recognizedSets.filter(set => set.recognized && set.isFivePieceActive && set.data.category === "support").length;
+      const recognizedSelfishSets = analyzed.recognizedSets.filter(set => set.recognized && set.isFivePieceActive && set.data.category === "selfish").length;
+      const duplicateBuffPenalty = analyzed.duplicateBuffs.length * 4;
+      let support = Math.min(100, (c.role === "Healer" ? 40 : c.role === "Tank" ? 28 : 12) + supportSkillHits * 7 + recognizedSupportSets * 8 + (c.contentType === "Trials" ? 8 : 0) + gearCompletionBonus * 0.2 - duplicateBuffPenalty);
+      let damage = Math.min(100, (c.role === "DPS" ? 48 : c.role === "Hybrid" ? 32 : 16) + dpsHits * 7 + uniqueSets * 4 + recognizedSelfishSets * 6 + gearCompletionBonus * 0.3);
+      let survivability = Math.min(100, (c.role === "Tank" ? 55 : 25) + (c.armorWeight === "Heavy" ? 22 : c.armorWeight === "Mixed" ? 12 : 5) + Math.floor(c.attributes.health / 2) + gearCompletionBonus * 0.2);
+      let utility = Math.min(100, 20 + ccHits * 10 + supportSkillHits * 4 + recognizedSupportSets * 6 + (uniqueSets > 1 ? 10 : 2) + gearCompletionBonus * 0.2 - duplicateBuffPenalty);
+      let overall = Math.max(1, Math.round((support + damage + survivability + utility + craftingValue) / 5));
+      return { support, damage, survivability, utility, craftingValue, overall, uniqueSets, totalSkills, supportSkillHits, ccHits, dpsHits, completedGearSlots, recognizedSupportSets, recognizedSelfishSets, duplicateBuffs: analyzed.duplicateBuffs };
+    }
+
+    function renderGuildSynergy() {
+      const c = currentCharacter();
+      const s = computeGuildScores();
+      const scoreItems = [
+        ["Group Support", s.support],
+        ["Damage", s.damage],
+        ["Survivability", s.survivability],
+        ["Utility", s.utility],
+        ["Crafting Value", s.craftingValue],
+      ];
+      el.guildScoreGrid.innerHTML = "";
+      scoreItems.forEach(([label, value]) => {
+        const wrap = document.createElement("div");
+        wrap.className = "card score-box";
+        wrap.innerHTML = `<div class="small-label">${label}</div><div class="score-num">${value}</div><div class="meter"><span style="width:${value}%"></span></div>`;
+        el.guildScoreGrid.appendChild(wrap);
+      });
+
+      const strengths = [];
+      const weaknesses = [];
+      const recs = [];
+
+      if (s.damage >= 65) strengths.push("Strong personal damage contribution for group content.");
+      else weaknesses.push("Damage contribution is currently modest for optimized group play.");
+      if (s.support >= 60) strengths.push("This build brings useful group support tools.");
+      else weaknesses.push("Group support coverage is limited.");
+      if (s.survivability >= 65) strengths.push("Survivability is solid for hard content or recovery moments.");
+      else weaknesses.push("Survivability could become an issue in sustained encounters.");
+      if (s.utility >= 60) strengths.push("Utility and control tools increase guild value.");
+      else weaknesses.push("Crowd control or debuff coverage looks thin.");
+      if (s.craftingValue >= 35) strengths.push("This character offers meaningful crafting and resource value.");
+      else weaknesses.push("Crafting progression is still low compared with dedicated crafter tabs.");
+      if (s.recognizedSupportSets > 0) strengths.push(`Recognized support set coverage detected: ${s.recognizedSupportSets} set(s) are helping group synergy.`);
+      if (s.recognizedSelfishSets > 0 && c.role === "DPS") strengths.push(`Recognized selfish DPS set coverage detected: ${s.recognizedSelfishSets} set(s) are supporting personal throughput.`);
+      if (s.duplicateBuffs.length > 0) weaknesses.push(`Overlapping set-bonus buff coverage detected in ${s.duplicateBuffs.length} area(s), which may reduce total group value.`);
+
+      if (s.support < 50) recs.push("This build has decent personal pressure but lacks group buffs. Consider adding one support-oriented skill or set so your group gains more value in dungeons or trials.");
+      if (s.utility < 50) recs.push("This setup is light on control and debuff utility. Add a crowd control, taunt, pull, or group debuff skill to improve dungeon and raid synergy.");
+      if (s.damage < 55 && c.role === "DPS") recs.push("Your role is damage-focused, but the build is not yet maximizing offensive pressure. Upgrade one set or skill slot toward a stronger damage package.");
+      if (s.survivability < 55) recs.push("This build may struggle in longer encounters. Shift one enchantment, armor weight, or bar slot toward survivability for steadier endgame performance.");
+      if (s.uniqueSets < 2) recs.push("Your current equipped gear only shows one clear set direction. Add a second complementary set pairing to improve specialization and synergy scoring.");
+      if (s.completedGearSlots < 10) recs.push(`You currently have ${s.completedGearSlots} gear slots with named sets filled in. Completing more gear slots will improve recommendation quality and guild analysis accuracy.`);
+      if (s.duplicateBuffs.length > 0) {
+        s.duplicateBuffs.forEach(([buff, sets]) => {
+          recs.push(`You have overlapping set-bonus coverage for ${buff} from ${sets.join(", ")}. Replacing one of those sets could increase total guild utility.`);
+        });
+      }
+      if (recs.length === 0) recs.push("The build is broadly well-rounded for current group goals. Fine-tune skill morphs and set pairing based on exact raid or PvP composition.");
+
+      renderSimpleList(el.guildStrengths, strengths);
+      renderSimpleList(el.guildWeaknesses, weaknesses);
+      if (state.beginnerMode) {
+        recs.unshift("New player tip: focus on one improvement at a time. A single support skill, cleaner gear pairing, or better survivability often helps more than a full rebuild.");
+      }
+      renderSimpleList(el.guildRecommendations, recs);
+      el.guildRoleFit.textContent = `${c.role} is currently the best fit. Overall Guild Synergy Rating: ${s.overall}/100 for ${c.contentType.toLowerCase()} content.`;
+    }
+
+    function renderSimpleList(container, items) {
+      container.innerHTML = "";
+      items.forEach(item => {
+        const li = document.createElement("li");
+        li.className = "list-item";
+        li.textContent = item;
+        container.appendChild(li);
+      });
+    }
+
+    function writeCharacterField(field, value) {
+      const c = currentCharacter();
+      c[field] = value;
+      saveAll();
+      renderAll();
+    }
+
+    function autoBuildRecommendations(presetRole = null) {
+      const c = currentCharacter();
+      if (presetRole) c.role = presetRole;
+      if (c.role === "Tank") {
+        c.armorWeight = "Heavy";
+        c.contentType = c.contentType === "PvP" ? "PvP" : "Dungeons";
+        c.attributes = { health: 50, magicka: 14, stamina: 0 };
+        c.bars.front.weapon = "Sword & Shield";
+        c.bars.back.weapon = "Ice Staff";
+      } else if (c.role === "Healer") {
+        c.armorWeight = "Light";
+        c.contentType = c.contentType === "PvP" ? "PvP" : "Dungeons";
+        c.attributes = { health: 10, magicka: 54, stamina: 0 };
+        c.bars.front.weapon = "Restoration Staff";
+        c.bars.back.weapon = "Lightning Staff";
+      } else if (c.role === "DPS") {
+        c.armorWeight = c.className === "Nightblade" ? "Medium" : "Light";
+        c.contentType = c.contentType || "PvE";
+        c.attributes = { health: 0, magicka: c.armorWeight === "Light" ? 64 : 0, stamina: c.armorWeight === "Medium" ? 64 : 0 };
+        c.bars.front.weapon = c.armorWeight === "Medium" ? "Dual Wield" : "Inferno Staff";
+        c.bars.back.weapon = c.armorWeight === "Medium" ? "Bow" : "Lightning Staff";
+      } else {
+        c.armorWeight = "Mixed";
+        c.contentType = "Casual Guild Runs";
+        c.attributes = { health: 20, magicka: 22, stamina: 22 };
+        c.bars.front.weapon = "Dual Wield";
+        c.bars.back.weapon = "Inferno Staff";
+      }
+      saveAll();
+      renderAll();
+      setStatus(`${presetRole || c.role} quick-start recommendation applied to the active character.`);
+    }
+
+    function applyCrafterPreset() {
+      const c = currentCharacter();
+      c.role = "Hybrid";
+      c.contentType = "Casual Guild Runs";
+      c.mode = "Solo";
+      c.armorWeight = "Mixed";
+      Object.keys(c.crafting).forEach(line => {
+        c.crafting[line].level = Math.max(c.crafting[line].level, 20);
+      });
+      saveAll();
+      renderAll();
+      setStatus("Crafter quick-start applied to the active character.");
+    }
+
+    function addCharacter() {
+      const name = el.newCharacterName.value.trim() || `Character ${state.characters.length + 1}`;
+      const character = defaultCharacter(name);
+      state.characters.push(character);
+      state.activeCharacterId = character.id;
+      el.newCharacterName.value = "";
+      saveAll();
+      renderAll();
+      setStatus(`Created ${name}.`);
+    }
+
+    function renameCharacter() {
+      const name = el.renameCharacterName.value.trim();
+      if (!name) return;
+      currentCharacter().name = name;
+      saveAll();
+      renderAll();
+      setStatus(`Renamed active character to ${name}.`);
+    }
+
+    function duplicateCharacter() {
+      const original = currentCharacter();
+      const clone = JSON.parse(JSON.stringify(original));
+      clone.id = uid();
+      clone.name = `${original.name} Copy`;
+      state.characters.push(clone);
+      state.activeCharacterId = clone.id;
+      saveAll();
+      renderAll();
+      setStatus(`Duplicated ${original.name}.`);
+    }
+
+    function deleteCharacter() {
+      if (state.characters.length === 1) {
+        setStatus("At least one character tab must remain.");
+        return;
+      }
+      const name = currentCharacter().name;
+      state.characters = state.characters.filter(c => c.id !== state.activeCharacterId);
+      state.activeCharacterId = state.characters[0].id;
+      saveAll();
+      renderAll();
+      setStatus(`Deleted ${name}.`);
+    }
+
+    function validateCharacter(candidate) {
+      if (!candidate || typeof candidate !== "object") return { ok: false, error: "Imported character is not an object." };
+      const requiredStrings = ["name", "className", "race", "alliance", "role", "contentType", "mode", "armorWeight"];
+      for (const key of requiredStrings) {
+        if (typeof candidate[key] !== "string") return { ok: false, error: `Missing or invalid field: ${key}` };
+      }
+      if (!CLASSES[candidate.className]) return { ok: false, error: "Invalid class name." };
+      if (!candidate.attributes || !candidate.cp || !candidate.bars || !candidate.gear || !candidate.crafting || !candidate.traitResearch) {
+        return { ok: false, error: "Imported character is missing core build sections." };
+      }
+      return { ok: true };
+    }
+
+    function normalizeCharacter(candidate) {
+      const base = defaultCharacter(candidate.name || "Imported Character");
+      const merged = { ...base, ...candidate };
+      merged.id = uid();
+      merged.attributes = { ...base.attributes, ...(candidate.attributes || {}) };
+      merged.cp = { ...base.cp, ...(candidate.cp || {}) };
+      merged.bars = {
+        front: { ...base.bars.front, ...(candidate.bars?.front || {}) },
+        back: { ...base.bars.back, ...(candidate.bars?.back || {}) }
+      };
+      merged.bars.front.slots = Array.isArray(candidate.bars?.front?.slots) ? candidate.bars.front.slots.map(slot => ({ ...makeSkillSlot(), ...slot })) : base.bars.front.slots;
+      merged.bars.back.slots = Array.isArray(candidate.bars?.back?.slots) ? candidate.bars.back.slots.map(slot => ({ ...makeSkillSlot(), ...slot })) : base.bars.back.slots;
+      merged.gear = { ...base.gear, ...(candidate.gear || {}) };
+      GEAR_SLOTS.forEach(slot => { merged.gear[slot] = { ...makeGearSlot(slot), ...(candidate.gear?.[slot] || {}) }; });
+      merged.crafting = { ...base.crafting, ...(candidate.crafting || {}) };
+      Object.keys(CRAFTING).forEach(line => {
+        merged.crafting[line] = { level: Number(candidate.crafting?.[line]?.level || base.crafting[line].level) };
+      });
+      merged.traitResearch = { ...base.traitResearch, ...(candidate.traitResearch || {}) };
+      Object.keys(TRAIT_TRACKS).forEach(line => {
+        const incoming = candidate.traitResearch?.[line];
+        merged.traitResearch[line] = Array.isArray(incoming)
+          ? incoming.map((t, idx) => ({ name: TRAIT_TRACKS[line][idx] || t.name || `Trait ${idx+1}`, known: !!t.known, timer: t.timer || "" }))
+          : base.traitResearch[line];
+      });
+      return merged;
+    }
+
+    function importJson() {
+      const raw = prompt("Paste exported build JSON or full roster JSON here:");
+      if (!raw) return;
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed.characters)) {
+          const validated = [];
+          for (const candidate of parsed.characters) {
+            const check = validateCharacter(candidate);
+            if (!check.ok) throw new Error(check.error);
+            validated.push(normalizeCharacter(candidate));
+          }
+          if (!validated.length) throw new Error("Roster import contained no valid characters.");
+          state.characters = validated;
+          state.activeCharacterId = validated[0].id;
+          saveAll();
+          renderAll();
+          setStatus("Full character roster imported successfully.");
+          return;
+        }
+        const check = validateCharacter(parsed);
+        if (!check.ok) throw new Error(check.error);
+        const normalized = normalizeCharacter(parsed);
+        state.characters.push(normalized);
+        state.activeCharacterId = normalized.id;
+        saveAll();
+        renderAll();
+        setStatus("Character imported as a new tab.");
+      } catch (e) {
+        setStatus(`Import failed: ${e.message}`);
+      }
+    }
+
+    function exportJson() {
+      navigator.clipboard.writeText(JSON.stringify(currentCharacter(), null, 2))
+        .then(() => setStatus("Active character JSON copied to clipboard."))
+        .catch(() => setStatus("Clipboard is unavailable here."));
+    }
+
+    function exportRosterJson() {
+      const payload = {
+        characters: state.characters,
+        exportedAt: new Date().toISOString(),
+        version: "2.1"
+      };
+      navigator.clipboard.writeText(JSON.stringify(payload, null, 2))
+        .then(() => setStatus("Full character roster JSON copied to clipboard."))
+        .catch(() => setStatus("Clipboard is unavailable here."));
+    }
+
+    function copyShareLink() {
+      const url = createShareLink();
+      navigator.clipboard.writeText(url)
+        .then(() => {
+          history.replaceState({}, "", url);
+          setStatus("Shareable link copied to clipboard.");
+        })
+        .catch(() => setStatus("Could not copy shareable link."));
+    }
+
+    function bindEvents() {
+      el.addCharacterBtn.addEventListener("click", addCharacter);
+      el.beginnerModeToggle.addEventListener("change", e => {
+        state.beginnerMode = e.target.checked;
+        saveAll();
+        renderAll();
+        setStatus(state.beginnerMode ? "Beginner Friendly Mode enabled." : "Beginner Friendly Mode disabled.");
+      });
+      el.starterDpsBtn.addEventListener("click", () => autoBuildRecommendations("DPS"));
+      el.starterHealerBtn.addEventListener("click", () => autoBuildRecommendations("Healer"));
+      el.starterTankBtn.addEventListener("click", () => autoBuildRecommendations("Tank"));
+      el.starterCrafterBtn.addEventListener("click", applyCrafterPreset);
+      el.renameCharacterBtn.addEventListener("click", renameCharacter);
+      el.duplicateCharacterBtn.addEventListener("click", duplicateCharacter);
+      el.deleteCharacterBtn.addEventListener("click", deleteCharacter);
+      el.autoBuildBtn.addEventListener("click", autoBuildRecommendations);
+      el.copyJsonBtn.addEventListener("click", exportJson);
+      el.copyRosterBtn.addEventListener("click", exportRosterJson);
+      el.importJsonBtn.addEventListener("click", importJson);
+      el.shareLinkBtn.addEventListener("click", copyShareLink);
+
+      document.querySelectorAll("#mainTabs .tab").forEach(btn => btn.addEventListener("click", () => {
+        state.activeMainTab = btn.dataset.tab;
+        saveAll();
+        renderAll();
+      }));
+      document.querySelectorAll("#builderTabs .subtab").forEach(btn => btn.addEventListener("click", () => {
+        state.activeBuilderSubtab = btn.dataset.builderTab;
+        saveAll();
+        renderAll();
+      }));
+
+      [
+        [el.classSelect, "className"],
+        [el.raceSelect, "race"],
+        [el.allianceSelect, "alliance"],
+        [el.roleSelect, "role"],
+        [el.contentTypeSelect, "contentType"],
+        [el.modeSelect, "mode"],
+        [el.armorWeightSelect, "armorWeight"]
+      ].forEach(([node, field]) => node.addEventListener("change", e => {
+        writeCharacterField(field, e.target.value);
+      }));
+
+      el.characterNotes.addEventListener("input", e => {
+        currentCharacter().notes = e.target.value;
+        saveAll();
+      });
+      el.characterNotes.addEventListener("change", e => {
+        currentCharacter().notes = e.target.value;
+        saveAll();
+        renderAll();
+      });
+
+      [[el.attrHealth, "health"], [el.attrMagicka, "magicka"], [el.attrStamina, "stamina"]].forEach(([node, field]) => node.addEventListener("change", e => {
+        currentCharacter().attributes[field] = Number(e.target.value || 0);
+        saveAll();
+        renderAll();
+      }));
+      [[el.cpWarfare, "warfare"], [el.cpFitness, "fitness"], [el.cpCraft, "craft"]].forEach(([node, field]) => node.addEventListener("change", e => {
+        currentCharacter().cp[field] = Number(e.target.value || 0);
+        saveAll();
+        renderAll();
+      }));
+
+      el.frontWeaponSelect.addEventListener("change", e => {
+        currentCharacter().bars.front.weapon = e.target.value;
+        saveAll();
+        renderAll();
+      });
+      el.backWeaponSelect.addEventListener("change", e => {
+        currentCharacter().bars.back.weapon = e.target.value;
+        saveAll();
+        renderAll();
+      });
+      el.craftingLevelInput.addEventListener("change", e => {
+        currentCharacter().crafting[state.activeCraftingTab].level = Number(e.target.value || 1);
+        saveAll();
+        renderAll();
+      });
+
+      document.addEventListener("input", e => {
+        const target = e.target;
+        if (target.dataset.side && target.dataset.type === "custom-name") {
+          const slot = currentCharacter().bars[target.dataset.side].slots[Number(target.dataset.slot)];
+          slot.customName = target.value;
+          slot.name = target.value;
+          slot.line = "Custom";
+          slot.baseName = "";
+          saveAll();
+        }
+        if (target.dataset.gearSlot && target.dataset.gearField === "set") {
+          currentCharacter().gear[target.dataset.gearSlot][target.dataset.gearField] = target.value;
+          saveAll();
+        }
+        if (target.dataset.traitLine && target.dataset.traitField === "timer") {
+          currentCharacter().traitResearch[target.dataset.traitLine][Number(target.dataset.traitIndex)].timer = target.value;
+          saveAll();
+        }
+      });
+
+      document.addEventListener("change", e => {
+        const target = e.target;
+        if (target.dataset.side && target.dataset.type === "skill-select") {
+          const slot = currentCharacter().bars[target.dataset.side].slots[Number(target.dataset.slot)];
+          const catalog = getSkillCatalogForClass(currentCharacter().className);
+          const matched = catalog.find(s => s.name === target.value);
+          if (target.value === "Custom Skill") {
+            slot.line = "Custom";
+            slot.baseName = "";
+            slot.name = slot.customName || slot.name || "";
+            slot.morph = "";
+          } else if (matched) {
+            slot.line = matched.line;
+            slot.baseName = matched.name;
+            slot.name = matched.name;
+            slot.customName = "";
+            slot.morph = matched.morphs[0] || "";
+          } else {
+            slot.line = "";
+            slot.baseName = "";
+            slot.name = "";
+            slot.customName = "";
+            slot.morph = "";
+          }
+          saveAll();
+          renderAll();
+        }
+        if (target.dataset.side && target.dataset.type === "morph-select") {
+          const slot = currentCharacter().bars[target.dataset.side].slots[Number(target.dataset.slot)];
+          slot.morph = target.value;
+          if (target.value) slot.name = target.value;
+          saveAll();
+          renderAll();
+        }
+        if (target.dataset.gearSlot && ["trait", "enchant"].includes(target.dataset.gearField)) {
+          currentCharacter().gear[target.dataset.gearSlot][target.dataset.gearField] = target.value;
+          saveAll();
+          renderAll();
+        }
+        if (target.dataset.traitLine && target.dataset.traitField === "known") {
+          currentCharacter().traitResearch[target.dataset.traitLine][Number(target.dataset.traitIndex)].known = target.checked;
+          saveAll();
+          renderAll();
+        }
+      });
+    }
+
+    function sanitizeStateForPublish() {
+      if (!Array.isArray(state.characters) || !state.characters.length) {
+        state.characters = [defaultCharacter("Nightblade DPS")];
+        state.activeCharacterId = state.characters[0].id;
+      }
+      if (!state.characters.some(c => c.id === state.activeCharacterId)) {
+        state.activeCharacterId = state.characters[0].id;
+      }
+      if (!Object.keys(CRAFTING).includes(state.activeCraftingTab)) {
+        state.activeCraftingTab = Object.keys(CRAFTING)[0];
+      }
+      if (!["builder", "bis", "crafting", "traits", "guild"].includes(state.activeMainTab)) {
+        state.activeMainTab = "builder";
+      }
+      if (!["identity", "attributes", "skills", "gear"].includes(state.activeBuilderSubtab)) {
+        state.activeBuilderSubtab = "identity";
+      }
+    }
+
+    function renderAll() {
+      renderCharacterTabs();
+      renderMainTabs();
+      renderBuilderSubtabs();
+      renderCraftingTabs();
+      renderIdentity();
+      el.beginnerModeToggle.checked = !!state.beginnerMode;
+      renderAttributes();
+      renderSkills();
+      renderGear();
+      renderBIS();
+      renderCraftingPanel();
+      renderTraitResearch();
+      renderGuildSynergy();
+    }
+
+    function initRefs() {
+      Object.assign(el, {
+        statusMessage: document.getElementById("statusMessage"),
+        beginnerModeToggle: document.getElementById("beginnerModeToggle"),
+        starterDpsBtn: document.getElementById("starterDpsBtn"),
+        starterHealerBtn: document.getElementById("starterHealerBtn"),
+        starterTankBtn: document.getElementById("starterTankBtn"),
+        starterCrafterBtn: document.getElementById("starterCrafterBtn"),
+        characterTabs: document.getElementById("characterTabs"),
+        newCharacterName: document.getElementById("newCharacterName"),
+        renameCharacterName: document.getElementById("renameCharacterName"),
+        addCharacterBtn: document.getElementById("addCharacterBtn"),
+        renameCharacterBtn: document.getElementById("renameCharacterBtn"),
+        duplicateCharacterBtn: document.getElementById("duplicateCharacterBtn"),
+        deleteCharacterBtn: document.getElementById("deleteCharacterBtn"),
+        classSelect: document.getElementById("classSelect"),
+        raceSelect: document.getElementById("raceSelect"),
+        allianceSelect: document.getElementById("allianceSelect"),
+        roleSelect: document.getElementById("roleSelect"),
+        contentTypeSelect: document.getElementById("contentTypeSelect"),
+        modeSelect: document.getElementById("modeSelect"),
+        armorWeightSelect: document.getElementById("armorWeightSelect"),
+        characterNotes: document.getElementById("characterNotes"),
+        classOverview: document.getElementById("classOverview"),
+        classStrengths: document.getElementById("classStrengths"),
+        classPlaystyles: document.getElementById("classPlaystyles"),
+        summaryGrid: document.getElementById("summaryGrid"),
+        autoBuildBtn: document.getElementById("autoBuildBtn"),
+        copyJsonBtn: document.getElementById("copyJsonBtn"),
+        copyRosterBtn: document.getElementById("copyRosterBtn"),
+        importJsonBtn: document.getElementById("importJsonBtn"),
+        shareLinkBtn: document.getElementById("shareLinkBtn"),
+        attrHealth: document.getElementById("attrHealth"),
+        attrMagicka: document.getElementById("attrMagicka"),
+        attrStamina: document.getElementById("attrStamina"),
+        cpWarfare: document.getElementById("cpWarfare"),
+        cpFitness: document.getElementById("cpFitness"),
+        cpCraft: document.getElementById("cpCraft"),
+        frontWeaponSelect: document.getElementById("frontWeaponSelect"),
+        backWeaponSelect: document.getElementById("backWeaponSelect"),
+        frontSkillSlots: document.getElementById("frontSkillSlots"),
+        backSkillSlots: document.getElementById("backSkillSlots"),
+        gearSlots: document.getElementById("gearSlots"),
+        bisSets: document.getElementById("bisSets"),
+        bisNotes: document.getElementById("bisNotes"),
+        craftingTabs: document.getElementById("craftingTabs"),
+        craftingHeading: document.getElementById("craftingHeading"),
+        craftingLevelInput: document.getElementById("craftingLevelInput"),
+        craftingStage: document.getElementById("craftingStage"),
+        craftingSummary: document.getElementById("craftingSummary"),
+        craftingMaterials: document.getElementById("craftingMaterials"),
+        craftingTips: document.getElementById("craftingTips"),
+        craftingContribution: document.getElementById("craftingContribution"),
+        traitResearchGrid: document.getElementById("traitResearchGrid"),
+        guildScoreGrid: document.getElementById("guildScoreGrid"),
+        guildStrengths: document.getElementById("guildStrengths"),
+        guildWeaknesses: document.getElementById("guildWeaknesses"),
+        guildRecommendations: document.getElementById("guildRecommendations"),
+        guildRoleFit: document.getElementById("guildRoleFit")
+      });
+    }
+
+    initRefs();
+    populateStaticSelects();
+    const loadedFromUrl = syncShareableFromUrl();
+    if (!loadedFromUrl) loadSaved();
+    sanitizeStateForPublish();
+    bindEvents();
+    renderAll();
+    saveAll();
+    if (loadedFromUrl) setStatus("Build loaded from shareable link.");
+  </script>
+</body>
+</html>
